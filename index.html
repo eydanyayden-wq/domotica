@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Control LED con Firebase</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 400px;
+            margin: 50px auto;
+            padding: 20px;
+            text-align: center;
+            background-color: #f0f0f0;
+        }
+        
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .btn {
+            padding: 15px 30px;
+            font-size: 18px;
+            margin: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        .btn-on {
+            background-color: #4CAF50;
+            color: white;
+        }
+        
+        .btn-off {
+            background-color: #f44336;
+            color: white;
+        }
+        
+        .btn:hover {
+            opacity: 0.8;
+        }
+        
+        .status {
+            margin: 20px 0;
+            padding: 10px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        
+        .on {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        
+        .off {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Control Remoto de LED</h1>
+        <p>Controla tu LED conectado al ESP32</p>
+        
+        <div id="status" class="status off">Estado: APAGADO</div>
+        
+        <button class="btn btn-on" onclick="controlLED(true)">ENCENDER LED</button>
+        <button class="btn btn-off" onclick="controlLED(false)">APAGAR LED</button>
+        
+        <div style="margin-top: 20px;">
+            <p><strong>Instrucciones:</strong></p>
+            <p>1. Asegúrate que el ESP32 esté conectado</p>
+            <p>2. Haz clic en los botones para controlar el LED</p>
+        </div>
+    </div>
+
+    <script>
+        // Configuración de Firebase - REEMPLAZA con tu configuración
+        const firebaseConfig = {
+            apiKey: "TU_API_KEY",
+            authDomain: "mi-casa-domotica-d48a5.firebaseapp.com",
+            databaseURL: "https://mi-casa-domotica-d48a5-default-rtdb.firebaseio.com",
+            projectId: "mi-casa-domotica-d48a5",
+            storageBucket: "mi-casa-domotica-d48a5.appspot.com",
+            messagingSenderId: "TU_SENDER_ID",
+            appId: "TU_APP_ID"
+        };
+
+        // Inicializar Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        // Función para controlar el LED
+        function controlLED(estado) {
+            database.ref('led').set(estado)
+                .then(() => {
+                    console.log('LED ' + (estado ? 'encendido' : 'apagado'));
+                    actualizarEstado(estado);
+                })
+                .catch((error) => {
+                    console.error('Error:', error);
+                    alert('Error al controlar el LED');
+                });
+        }
+
+        // Función para actualizar la interfaz
+        function actualizarEstado(estado) {
+            const statusElement = document.getElementById('status');
+            if (estado) {
+                statusElement.textContent = 'Estado: ENCENDIDO';
+                statusElement.className = 'status on';
+            } else {
+                statusElement.textContent = 'Estado: APAGADO';
+                statusElement.className = 'status off';
+            }
+        }
+
+        // Escuchar cambios en tiempo real
+        database.ref('led').on('value', (snapshot) => {
+            const estado = snapshot.val();
+            actualizarEstado(estado);
+        });
+
+        // Cargar estado inicial
+        database.ref('led').once('value').then((snapshot) => {
+            const estado = snapshot.val();
+            actualizarEstado(estado);
+        });
+    </script>
+</body>
+</html>
